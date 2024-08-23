@@ -2,7 +2,7 @@
 
 from celery import Celery
 
-app = Celery('comfyui_router', broker='pyamqp://runner:UjLyQtRMWTG68aAKecq4Hn@localhost//')
+app = Celery('comfyui_router', broker='pyamqp://runner:UjLyQtRMWTG68aAKecq4Hn@52.10.216.28//')
 
 @app.task
 def some_task():
