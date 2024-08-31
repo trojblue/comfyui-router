@@ -4,6 +4,10 @@ Distributed task dispatcher for comfyui clusters
 
 (WIP)
 
+## Setup project
+```bash
+pip install -e .
+```
 
 
 ## Setup RabbitMQ
@@ -21,5 +25,6 @@ sudo systemctl status rabbitmq-server
 ## Starting Worker
 
 ```bash
+celery -A comfyui_router.tasks worker --loglevel=INFO
 
 ```
