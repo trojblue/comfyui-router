@@ -1,4 +1,5 @@
 from PIL import Image
+import io
 
 def extract_images_from_response(raw_response:dict):
     """
