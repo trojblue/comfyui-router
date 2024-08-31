@@ -21,10 +21,20 @@ sudo systemctl status rabbitmq-server
 # go to localhost:15672, or use tunnel to view admin panel
 ```
 
+## Setup project
+
+```bash
+git clone https://github.com/trojblue/comfyui-router && cd comfyui-router
+pip install -e .
+```
+
+
 
 ## Starting Worker
 
 ```bash
-celery -A comfyui_router.tasks worker --loglevel=INFO
-
+celery -A comfyui_router.tasks worker --loglevel=info
 ```
+
+
+

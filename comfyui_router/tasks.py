@@ -5,6 +5,12 @@ import urllib.request
 import websocket
 import uuid
 
+
+"""
+celery -A comfyui_router.tasks worker --loglevel=info
+
+"""
+
 MQ_IP = "52.10.216.28"
 
 # Initialize the Celery app
@@ -76,8 +82,12 @@ class WorkflowExecutor:
 
 @app.task
 def process_request(unique_key, json_data):
+    
+    # PORT = 18195
+    PORT = 8188
+
     # Initialize the WorkflowExecutor
-    executor = WorkflowExecutor()
+    executor = WorkflowExecutor(server_address=f"127.0.0.1:{PORT}")
 
     # Run the workflow using the provided JSON data
     workflow_result = executor.run_workflow(json_data)
