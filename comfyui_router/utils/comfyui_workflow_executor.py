@@ -11,30 +11,61 @@ import urllib.parse
 from PIL import Image
 import io
 
+from typing import Dict, Any, Tuple, Iterator, Union
+from pathlib import Path
+
+from rich.console import Console
+from rich.text import Text
+from rich.pretty import Pretty
+
 class Workflow:
-    def __init__(self, raw_json: Dict[str, Any]):
-        self.raw_json = raw_json
+    def __init__(self, raw_json: Union[Dict[str, Any], str, Path]):
+        """
+        Initializes the Workflow class.
+
+        Args:
+            raw_json (Union[Dict[str, Any], str, Path]): The raw JSON data as a dictionary 
+                                                         or a path to a JSON file.
+        """
+        # Check if the input is a path, read the JSON file
+        if isinstance(raw_json, (str, Path)):
+            raw_json = Path(raw_json)  # Ensure it's a Path object
+            if raw_json.exists():
+                with raw_json.open('r', encoding='utf-8') as f:
+                    self.raw_json = json.load(f)
+            else:
+                raise FileNotFoundError(f"File not found at {raw_json}")
+        elif isinstance(raw_json, dict):
+            self.raw_json = raw_json
+        else:
+            raise ValueError("Invalid input type. Expected a dictionary or a path-like object.")
+
         self._modifiable_keys = self._extract_modifiable_keys()
 
     def _extract_modifiable_keys(self) -> Dict[str, Tuple[str, Any]]:
         """Extracts and returns a dictionary of modifiable keys and their content."""
         modifiable_keys = {}
-        for node_id, node_data in self.raw_json.items():
-            if node_data['class_type'] == 'TaggedAny':
-                tag = node_data['inputs'].get('tag')
-                content = node_data['inputs'].get('content')
-                if tag and content:
-                    modifiable_keys[tag] = (node_id, content)
+        try:
+            for node_id, node_data in self.raw_json.items():
+                if node_data.get('class_type') == 'TaggedAny':
+                    tag = node_data['inputs'].get('tag')
+                    content = node_data['inputs'].get('content')
+                    if tag and content:
+                        modifiable_keys[tag] = (node_id, content)
+        except Exception as e:
+            raise ValueError(
+                f"Error extracting modifiable keys from the workflow. Not a valid json?\n{e} | {e.__class__.__name__}"
+            )
         return modifiable_keys
 
     def get_modifiable_keys(self) -> Dict[str, Any]:
         """Returns a dictionary of modifiable keys and their content."""
         try:
-            keys = {key: value[1]
-                    for key, value in self._modifiable_keys.items()}
-        except Exceptions as e:
+            keys = {key: value[1] for key, value in self._modifiable_keys.items()}
+        except Exception as e:
             raise ValueError(
-                f"Workflow does not contain any modifiable keys. It's not exportd as API format?\n{e} | {e.__class__.__name__}")
+                f"Workflow does not contain any modifiable keys. It's not exported as API format?\n{e} | {e.__class__.__name__}"
+            )
 
         return keys
 
@@ -74,7 +105,18 @@ class Workflow:
 
     def __repr__(self) -> str:
         """Custom representation for the Workflow class."""
-        return f"<Workflow with {len(self.raw_json)} nodes> | modifiable keys: {list(self._modifiable_keys.keys())}"
+        modifiable_keys_str = ', '.join(f"{key}: {repr(value)}" for key, value in self.get_modifiable_keys().items())
+
+        # Limit the length to prevent overly verbose output
+        if len(modifiable_keys_str) > 100:  # Adjust the limit as needed
+            modifiable_keys_str = modifiable_keys_str[:97] + "..."
+
+        return (
+            f"<Workflow with {len(self.raw_json)} nodes>\n"
+            f"Modifiable keys: {list(self._modifiable_keys.keys())}\n"
+            f"Key-Value pairs: {{{modifiable_keys_str}}}"
+        )
+
 
 
 class WorkflowExecutor:
