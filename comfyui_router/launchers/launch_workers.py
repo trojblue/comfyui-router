@@ -6,11 +6,8 @@ import requests
 from contextlib import ExitStack
 from tqdm import tqdm
 
-COMFY_DIR = "/rmt/yada/apps/comfyui"
-START_PORT = 18188
-END_PORT = 18195  # Specify the end port for scanning
-MQ_IP = "52.10.216.28"
-BROKER_URL = f'pyamqp://runner:UjLyQtRMWTG68aAKecq4Hn@{MQ_IP}//'
+from comfyui_router.utils import get_config
+
 CELERY_APP_NAME = 'comfyui_router.tasks'
 CELERY_MODULE = 'comfyui_router.tasks'
 
@@ -33,8 +30,10 @@ def is_comfyui_port_active(port):
         print(f"Unexpected error while connecting to {url}: {e}")
     return False
 
-def start_celery_worker(port):
+
+def start_celery_worker(broker_url: str, port: int):
     """Start a Celery worker for a specific ComfyUI instance port."""
+
     command = [
         'celery', '-A', CELERY_MODULE, 'worker',
         '--loglevel=info',
@@ -42,11 +41,18 @@ def start_celery_worker(port):
         '-n', f'worker_{port}@%h'  # Unique worker name per port
     ]
     env = os.environ.copy()
-    env['BROKER_URL'] = BROKER_URL
+    env['BROKER_URL'] = broker_url
     process = subprocess.Popen(command, env=env)
     return process
 
+
 def main():
+
+    config = get_config()
+    START_PORT = config.get("START_PORT", 8188)
+    END_PORT = config.get("END_PORT", START_PORT+100)
+    BROKER_URL = config.get("BROKER_URL", "")
+
     # Step 1: Scan for active ComfyUI ports
     active_ports = []
     for port in tqdm(range(START_PORT, END_PORT + 1), desc="Scanning ports"):
@@ -58,18 +64,21 @@ def main():
         return
 
     # Step 2: Start a separate Celery worker for each active port
-    print(f"Starting Celery workers for the following active ports: {active_ports}")
+    print(
+        f"Starting Celery workers for the following active ports: {active_ports}")
     processes = []
     with ExitStack() as stack:
         for port in active_ports:
             print(f"Starting Celery worker for port {port}...")
-            process = start_celery_worker(port)
+            process = start_celery_worker(BROKER_URL, port)
             processes.append(process)
-            stack.callback(process.terminate)  # Ensure process terminates on exit
+            # Ensure process terminates on exit
+            stack.callback(process.terminate)
 
         # Wait for all processes to complete
         for process in processes:
             process.wait()
+
 
 if __name__ == "__main__":
     main()
