@@ -1,7 +1,4 @@
-import os
 import click
-import GPUtil
-from omegaconf import OmegaConf
 
 from comfyui_router.utils.config import configure_comfyui
 from comfyui_router.launchers.launch_comfyuis import launch_comfyuis
