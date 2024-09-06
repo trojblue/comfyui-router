@@ -1,26 +1,11 @@
-"""
-@author: BennyKok
-@title: comfyui-deploy
-@nickname: Comfy Deploy
-@description: 
-"""
 import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__)))
-
-import inspect
-import sys
-import importlib
-import subprocess
-import requests
-import folder_paths
-from folder_paths import add_model_folder_path, get_filename_list, get_folder_paths
-from tqdm import tqdm
-
 from rich import print
-from comfy.cli_args import args
 
+
+# ===== Launching celery worker during comfy init =====
+
+
+from comfy.cli_args import args
 
 from comfyui_router.utils import get_router_config
 from comfyui_router.launchers.launch_workers import start_celery_worker
@@ -42,37 +27,21 @@ else:
     print("No broker URL provided, Celery worker not started.")
 
 
-# from . import custom_routes
-# import routes
+# ===== Initializing custom nodes =====
 
-ag_path = os.path.join(os.path.dirname(__file__))
 
-def get_python_files(path):
-    return [f[:-3] for f in os.listdir(path) if f.endswith(".py")]
+import easy_nodes
+easy_nodes.initialize_easy_nodes(default_category="ComfyUI Router", auto_register=True)
 
-def append_to_sys_path(path):
-    if path not in sys.path:
-        sys.path.append(path)
+from .comfy_nodes import *  # noqa: F403, E402
 
-paths = ["comfy-nodes"]
-files = []
+NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS = easy_nodes.get_node_mappings()
 
-for path in paths:
-    full_path = os.path.join(ag_path, path)
-    append_to_sys_path(full_path)
-    files.extend(get_python_files(full_path))
+print("NODE_CLASS_MAPPINGS", NODE_CLASS_MAPPINGS)
+print("NODE_DISPLAY_NAME_MAPPINGS", NODE_DISPLAY_NAME_MAPPINGS)
 
-NODE_CLASS_MAPPINGS = {}
-NODE_DISPLAY_NAME_MAPPINGS = {}
 
-# Import all the modules and append their mappings
-for file in files:
-    module = importlib.import_module(file)
-
-    if hasattr(module, "NODE_CLASS_MAPPINGS"):
-        NODE_CLASS_MAPPINGS.update(module.NODE_CLASS_MAPPINGS)
-    if hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS"):
-        NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
-
-WEB_DIRECTORY = "web-plugin"
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+
+# Optional: export the node list to a file so that e.g. ComfyUI-Manager can pick it up.
+easy_nodes.save_node_list(os.path.join(os.path.dirname(__file__), "node_list.json"))
