@@ -12,4 +12,7 @@ logging.basicConfig(
 
 def get_logger(name: str) -> logging.Logger:
     """Get a logger with the specified name."""
+    if not name:
+        name = "comfyui_router"
+        
     return logging.getLogger(name)

@@ -6,7 +6,7 @@ import requests
 from contextlib import ExitStack
 from tqdm import tqdm
 
-from .utils import get_config
+from comfyui_router.utils import get_config
 
 COMFY_DIR = "/rmt/yada/apps/comfyui"
 START_PORT = 18188

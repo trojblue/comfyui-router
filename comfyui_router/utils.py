@@ -1,11 +1,6 @@
 from PIL import Image
 import io
 
-import os
-from omegaconf import OmegaConf
-
-CONFIG_PATH = os.path.expanduser("~/.comfyui_router/config.yaml")
-
 
 def extract_images_from_response(raw_response:dict):
     """
@@ -38,14 +33,3 @@ def extract_images_from_response(raw_response:dict):
             extracted_images[node_id] = images
     
     return extracted_images
-
-
-def get_config():
-    """Retrieve the full configuration as a dictionary."""
-    if os.path.exists(CONFIG_PATH):
-        config = OmegaConf.load(CONFIG_PATH)
-    else:
-        raise FileNotFoundError(f"Configuration file not found at {CONFIG_PATH}. Please run 'crt configure' first.")
-
-    # Convert OmegaConf object to a standard Python dictionary
-    return OmegaConf.to_container(config, resolve=True)

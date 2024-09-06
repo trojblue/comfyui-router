@@ -4,7 +4,7 @@ import threading
 from contextlib import ExitStack
 from tqdm import tqdm
 
-from .utils import get_config, get_logger
+from comfyui_router.utils import get_config, get_logger
 
 logger = get_logger(__name__)
 
@@ -37,16 +37,8 @@ def run_comfyui_instance(port, device, comfy_dir, output_dir):
     return process
 
 
-def main(install_requirements_flag=True):
-    # Step 1: Get the configuration
-    config = get_config()
-    logger.info(f"Launching ComfyUI with configuration: {config}")
-    
-    # Extract relevant configuration values
-    comfy_dir = config["COMFY_DIR"]
-    output_dir = config["OUTPUT_DIR"]
-    start_port = config["START_PORT"]
-    cuda_devices = config["CUDA_DEVICES"]
+def launch_comfyui_instances(comfy_dir, output_dir, start_port, cuda_devices, 
+                             install_requirements_flag=True):
 
     # Step 2: Optionally install requirements
     base_directory = os.path.join(comfy_dir, 'custom_nodes')
@@ -71,5 +63,22 @@ def main(install_requirements_flag=True):
         for process in processes:
             process.wait()
 
+
+def launch_comfyuis(install_requirements_flag=True):
+    # Step 1: Get the configuration
+    config = get_config()
+    logger.info(f"Launching ComfyUI with configuration: {config}")
+    
+    # Extract relevant configuration values
+    comfy_dir = config["COMFY_DIR"]
+    output_dir = config["OUTPUT_DIR"]
+    start_port = config["START_PORT"]
+    cuda_devices = config["CUDA_DEVICES"]
+
+    # Launch ComfyUI instances
+    launch_comfyui_instances(comfy_dir, output_dir, start_port, cuda_devices, 
+                             install_requirements_flag=install_requirements_flag)
+
+
 if __name__ == "__main__":
-    main(install_requirements_flag=False)
+    launch_comfyuis(install_requirements_flag=False)
