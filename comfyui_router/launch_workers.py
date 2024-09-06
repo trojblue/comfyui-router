@@ -6,6 +6,8 @@ import requests
 from contextlib import ExitStack
 from tqdm import tqdm
 
+from .utils import get_config
+
 COMFY_DIR = "/rmt/yada/apps/comfyui"
 START_PORT = 18188
 END_PORT = 18195  # Specify the end port for scanning

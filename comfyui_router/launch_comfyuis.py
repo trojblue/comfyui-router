@@ -4,10 +4,9 @@ import threading
 from contextlib import ExitStack
 from tqdm import tqdm
 
-COMFY_DIR = "/rmt/yada/apps/comfyui"
-OUTPUT_DIR = "/lv0/comfy_outs"
-START_PORT = 18188
-CUDA_DEVICES = [0, 1, 2, 3, 4, 5, 6, 7]
+from .utils import get_config, get_logger
+
+logger = get_logger(__name__)
 
 def find_requirements_dirs(base_dir):
     """Find all subdirectories with a requirements.txt file."""
@@ -17,6 +16,7 @@ def find_requirements_dirs(base_dir):
         if os.path.isdir(os.path.join(base_dir, d)) and os.path.exists(os.path.join(base_dir, d, 'requirements.txt'))
     ]
 
+
 def install_requirements(requirements_dirs):
     """Install packages listed in requirements.txt for each subdirectory."""
     for directory in tqdm(requirements_dirs, desc="Installing requirements"):
@@ -24,20 +24,32 @@ def install_requirements(requirements_dirs):
         print(f"Installing requirements for folder {directory}...")
         subprocess.run(['pip', 'install', '-r', req_file], check=True)
 
-def run_comfyui_instance(port, device):
+
+def run_comfyui_instance(port, device, comfy_dir, output_dir):
     """Run a ComfyUI instance on a specific port and CUDA device."""
     command = [
-        'python', f'{COMFY_DIR}/main.py',
+        'python', f'{comfy_dir}/main.py',
         '--port', str(port),
         '--cuda-device', str(device),
-        '--output-dir', OUTPUT_DIR
+        '--output-dir', output_dir
     ]
     process = subprocess.Popen(command)
     return process
 
+
 def main(install_requirements_flag=True):
-    # Step 1: Optionally install requirements
-    base_directory = os.path.join(COMFY_DIR, 'custom_nodes')
+    # Step 1: Get the configuration
+    config = get_config()
+    logger.info(f"Launching ComfyUI with configuration: {config}")
+    
+    # Extract relevant configuration values
+    comfy_dir = config["COMFY_DIR"]
+    output_dir = config["OUTPUT_DIR"]
+    start_port = config["START_PORT"]
+    cuda_devices = config["CUDA_DEVICES"]
+
+    # Step 2: Optionally install requirements
+    base_directory = os.path.join(comfy_dir, 'custom_nodes')
     requirements_dirs = find_requirements_dirs(base_directory)
     
     if install_requirements_flag and requirements_dirs:
@@ -45,13 +57,13 @@ def main(install_requirements_flag=True):
     elif install_requirements_flag:
         print("No subdirectories with requirements.txt found.")
 
-    # Step 2: Start ComfyUI instances in separate threads
+    # Step 3: Start ComfyUI instances in separate threads
     processes = []
     with ExitStack() as stack:
-        for device in CUDA_DEVICES:
-            port = START_PORT + device
+        for device in cuda_devices:
+            port = start_port + device
             print(f"Starting ComfyUI on port {port} with CUDA device {device}")
-            process = run_comfyui_instance(port, device)
+            process = run_comfyui_instance(port, device, comfy_dir, output_dir)
             processes.append(process)
             stack.callback(process.terminate)  # Ensure process terminates on exit
 
