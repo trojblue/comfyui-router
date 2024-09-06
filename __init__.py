@@ -18,9 +18,29 @@ import folder_paths
 from folder_paths import add_model_folder_path, get_filename_list, get_folder_paths
 from tqdm import tqdm
 
-
+from rich import print
 from comfy.cli_args import args
-print(args.port)
+
+
+from comfyui_router.utils import get_config
+from comfyui_router.launchers.launch_workers import start_celery_worker
+
+from concurrent.futures import ThreadPoolExecutor
+
+worker_executor = ThreadPoolExecutor(max_workers=1)
+
+config = get_config()
+broker_url = config.get("BROKER_URL", "")
+
+if broker_url:
+    print(f"Celery worker starting on port: {args.port}")
+
+    worker_executor.submit(
+        start_celery_worker, broker_url, args.port
+    )
+else:
+    print("No broker URL provided, Celery worker not started.")
+
 
 # from . import custom_routes
 # import routes
