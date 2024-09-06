@@ -10,7 +10,10 @@ readme = "README.md"
 python = "^3.10"
 celery = "^5.4.0"
 msgpack = "^1.0.8"
+click = "^8.1.7"
 
+[tool.poetry.scripts]
+crt = 'comfyui_router.cli:cli'
 
 [build-system]
 requires = ["poetry-core"]
