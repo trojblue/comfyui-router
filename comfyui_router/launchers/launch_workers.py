@@ -6,7 +6,7 @@ import requests
 from contextlib import ExitStack
 from tqdm import tqdm
 
-from comfyui_router.utils import get_config
+from comfyui_router.utils import get_router_config
 
 CELERY_APP_NAME = 'comfyui_router.tasks'
 CELERY_MODULE = 'comfyui_router.tasks'
@@ -48,7 +48,7 @@ def start_celery_worker(broker_url: str, port: int):
 
 def main():
 
-    config = get_config()
+    config = get_router_config()
     START_PORT = config.get("START_PORT", 8188)
     END_PORT = config.get("END_PORT", START_PORT+100)
     BROKER_URL = config.get("BROKER_URL", "")

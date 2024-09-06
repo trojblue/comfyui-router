@@ -22,14 +22,14 @@ from rich import print
 from comfy.cli_args import args
 
 
-from comfyui_router.utils import get_config
+from comfyui_router.utils import get_router_config
 from comfyui_router.launchers.launch_workers import start_celery_worker
 
 from concurrent.futures import ThreadPoolExecutor
 
 worker_executor = ThreadPoolExecutor(max_workers=1)
 
-config = get_config()
+config = get_router_config()
 broker_url = config.get("BROKER_URL", "")
 
 if broker_url:

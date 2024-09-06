@@ -138,7 +138,6 @@ class WorkflowExecutor:
 
     def __call__(self, workflow_json: dict):
         return self.run_workflow(workflow_json)
-    
 
 
 def extract_images_from_response(raw_response:dict):
