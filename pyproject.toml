@@ -12,6 +12,7 @@ celery = "^5.4.0"
 msgpack = "^1.0.8"
 click = "^8.1.7"
 omegaconf = "^2.3.0"
+gputil = "^1.4.0"
 
 [tool.poetry.scripts]
 crt = 'comfyui_router.cli:cli'
