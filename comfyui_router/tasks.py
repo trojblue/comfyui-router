@@ -22,7 +22,7 @@ app.conf.update(
 )
 
 
-class WorkflowExecutor:
+class WorkflowExecutor2:
     def __init__(self, server_address="127.0.0.1:18195"):
         self.server_address = server_address
         self.client_id = str(uuid.uuid4())
@@ -79,6 +79,9 @@ class WorkflowExecutor:
         ws.connect(f"ws://{self.server_address}/ws?clientId={self.client_id}")
         results = self.get_results(ws, workflow_json)
         return results
+
+from comfyui_router.utils.comfyui_workflow_executor import WorkflowExecutor
+
 
 @app.task
 def process_request(unique_key, json_data):
