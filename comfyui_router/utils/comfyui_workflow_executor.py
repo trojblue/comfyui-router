@@ -107,9 +107,9 @@ class Workflow:
         """Custom representation for the Workflow class."""
         modifiable_keys_str = ', '.join(f"{key}: {repr(value)}" for key, value in self.get_modifiable_keys().items())
 
-        # Limit the length to prevent overly verbose output
-        if len(modifiable_keys_str) > 100:  # Adjust the limit as needed
-            modifiable_keys_str = modifiable_keys_str[:97] + "..."
+        # # Limit the length to prevent overly verbose output
+        # if len(modifiable_keys_str) > 100:  # Adjust the limit as needed
+        #     modifiable_keys_str = modifiable_keys_str[:97] + "..."
 
         return (
             f"<Workflow with {len(self.raw_json)} nodes>\n"
@@ -118,8 +118,18 @@ class Workflow:
         )
 
 
-
 class WorkflowExecutor:
+    def __init__(self):
+        pass
+
+    def run_workflow(self, workflow_json: dict):
+        raise NotImplementedError
+
+    def __call__(self, workflow_json: dict):
+        return self.run_workflow(workflow_json)
+
+
+class LocalWorkflowExecutor(WorkflowExecutor):
     def __init__(self, server_address="127.0.0.1:8188", timeout=120):
         self.server_address = server_address
         self.client_id = str(uuid.uuid4())
@@ -178,8 +188,44 @@ class WorkflowExecutor:
         images = self.get_images(ws, workflow_json)
         return images
 
-    def __call__(self, workflow_json: dict):
-        return self.run_workflow(workflow_json)
+
+import json
+from datetime import datetime
+import msgpack
+from celery import Celery
+from comfyui_router.utils.config import get_router_config
+
+
+class CeleryWorkflowExecutor(WorkflowExecutor):
+    def __init__(self, broker_url:str="", timeout=120):
+        """
+        """
+        self.client_id = str(uuid.uuid4())
+        self.timeout = timeout
+
+        # Initialize the Celery app
+        _broker_url = broker_url or get_router_config("BROKER_URL")
+        self.app = Celery('tasks', broker=_broker_url, backend='rpc://')
+
+    def run_workflow(self, workflow_json: dict):
+        
+        curr_time = datetime.now().strftime("%Y-%m-%d_%h:%m:%s")
+        # Unique key for the request (could be parameterized)
+        unique_key = f"req_{self.client_id}_{uuid.uuid4()}_curr_time"
+        
+        # Send the request to the Celery worker
+        result = self.app.send_task('comfyui_router.tasks.process_request', args=[unique_key, dict(workflow_json)])
+        
+        # Wait for the result (blocking)
+        packed_response = result.get(timeout=self.timeout)
+
+        # Decode the MessagePack response
+        _, raw_response = msgpack.unpackb(packed_response, raw=False)
+
+        # Extract images from the response
+        node_imgs = extract_images_from_response(raw_response)
+        return node_imgs
+
 
 
 def extract_images_from_response(raw_response:dict):

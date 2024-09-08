@@ -10,7 +10,7 @@ import os
 import time
 
 from .utils import _async_save
-from .comfyui_workflow_executor import Workflow, WorkflowExecutor
+from .comfyui_workflow_executor import Workflow, WorkflowExecutor, LocalWorkflowExecutor, CeleryWorkflowExecutor
 
 
 class WorkflowGradioGenerator:
@@ -18,12 +18,17 @@ class WorkflowGradioGenerator:
         'api_positive', 'api_negative', 'api_width', 'api_height', 'api_batchsize', 'api_steps', 'api_seed'
     ]
 
-    def __init__(self, common_orders: List[str] = None, save_dir: str = None):
+    def __init__(self, 
+                 common_orders: List[str] = [], 
+                 save_dir: str = "", 
+                 wf_executor: WorkflowExecutor = LocalWorkflowExecutor()
+                 ):
         """
         Initializes the WorkflowGradioGenerator with an optional list of common keys.
         """
         self.common_orders = common_orders if common_orders else self.DEFAULT_COMMON_ORDERS
         self.save_dir = save_dir
+        self.wf_executor = wf_executor
 
     def _extract_gradio_inputs(self, modifiable_keys: Dict[str, Any], hidden_params: List[str] = None) -> Tuple[List[gr.components.Component], Dict[str, Any]]:
         """
@@ -73,8 +78,7 @@ class WorkflowGradioGenerator:
         workflow.update_modifiable_keys(overrides)
         api_wf = dict(workflow)
 
-        executor = WorkflowExecutor()
-        return executor.run_workflow(api_wf)
+        return self.wf_executor.run_workflow(api_wf)
 
     def _generate_gradio_function(self, workflow: Any, input_keys: List[str]) -> Callable:
         """
