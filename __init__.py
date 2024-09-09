@@ -35,13 +35,13 @@ easy_nodes.initialize_easy_nodes(default_category="ComfyUI Router", auto_registe
 
 from .comfy_nodes import *  # noqa: F403, E402
 
-NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS = easy_nodes.get_node_mappings()
+# NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS = easy_nodes.get_node_mappings()
 
-print("NODE_CLASS_MAPPINGS", NODE_CLASS_MAPPINGS)
-print("NODE_DISPLAY_NAME_MAPPINGS", NODE_DISPLAY_NAME_MAPPINGS)
+# print("NODE_CLASS_MAPPINGS", NODE_CLASS_MAPPINGS)
+# print("NODE_DISPLAY_NAME_MAPPINGS", NODE_DISPLAY_NAME_MAPPINGS)
 
 
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+# __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
 
 # Optional: export the node list to a file so that e.g. ComfyUI-Manager can pick it up.
-easy_nodes.save_node_list(os.path.join(os.path.dirname(__file__), "node_list.json"))
+# easy_nodes.save_node_list(os.path.join(os.path.dirname(__file__), "node_list.json"))

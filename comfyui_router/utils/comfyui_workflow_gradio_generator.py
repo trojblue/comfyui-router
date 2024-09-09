@@ -13,6 +13,25 @@ from .utils import _async_save
 from .comfyui_workflow_executor import Workflow, WorkflowExecutor, LocalWorkflowExecutor, CeleryWorkflowExecutor
 
 
+from PIL import Image
+import io
+
+def convert_to_pil_images(result):
+    """
+    Convert lists of byte strings to PIL images while preserving the dictionary structure.
+    
+    Args:
+        result (dict): Dictionary where each key has a list of byte strings representing images.
+        
+    Returns:
+        dict: Dictionary with the same keys, but with lists of byte strings converted to PIL images.
+    """
+    # Use dictionary comprehension to maintain the original structure
+    return {
+        key: [Image.open(io.BytesIO(image_bytes)).copy() for image_bytes in byte_list]
+        for key, byte_list in result.items()
+    }
+
 class WorkflowGradioGenerator:
     DEFAULT_COMMON_ORDERS = [
         'api_positive', 'api_negative', 'api_width', 'api_height', 'api_batchsize', 'api_steps', 'api_seed'
@@ -89,6 +108,7 @@ class WorkflowGradioGenerator:
             Function to be executed by Gradio with fixed arguments.
             """
             overrides = dict(zip(input_keys, args))
+            # print("workflow received args:", overrides)
 
             # Handle random seed generation if api_seed is -1
             if 'api_seed' in overrides and overrides['api_seed'] == -1:
@@ -96,15 +116,25 @@ class WorkflowGradioGenerator:
 
             actual_seed = overrides.get('api_seed', -1)
             res = self._run_workflow_with_overrides(workflow, overrides)
+            # res: {'55': [b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR....'}
+
+            # convert bytes to PIL images
+            res = convert_to_pil_images(res)
+
+            # print(res)
 
             images = []
             for key, img_list in res.items():
                 if isinstance(img_list, list):
                     images.extend(img_list)
+            
+            # print(f"Generated {len(images)} images: {images}")
 
             if self.save_dir:
+                # print("Saving results to", self.save_dir)
                 self._save_results(images, overrides, actual_seed)
 
+            # print("Returning images and raw response")
             return images, res
 
         # Set the function signature to match the input keys
@@ -208,7 +238,7 @@ def demo():
                  'api_height': '1152',
                  'api_cfg': '0.9',
                  'api_sampler_name': 'euler_cfg_pp',
-                 'api_steps': 28
+                 'api_steps': 8
                  }
 
     workflow.update_modifiable_keys(overrides)
@@ -216,3 +246,9 @@ def demo():
 
     executor = WorkflowExecutor()
     res = executor.run_workflow(api_wf)
+
+    print(res)
+
+
+if __name__ == "__main__":
+    demo()

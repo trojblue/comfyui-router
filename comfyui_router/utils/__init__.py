@@ -5,3 +5,4 @@ from .comfyui_workflow_executor import Workflow, WorkflowExecutor, CeleryWorkflo
 from .comfyui_workflow_executor import extract_images_from_response
 
 from .comfyui_workflow_gradio_generator import WorkflowGradioGenerator
+from .comfyui_workflow_gradio_generator import workflow_to_iface
