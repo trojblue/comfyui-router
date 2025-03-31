@@ -193,6 +193,7 @@ class WorkflowGradioGenerator:
                                 height=900), gr.JSON(label="Raw Response")],
             title=title,
             description=description,
+            concurrency_limit=4,
         )
 
         return iface
