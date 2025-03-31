@@ -4,7 +4,7 @@ import threading
 from contextlib import ExitStack
 from tqdm import tqdm
 
-from comfyui_router.utils import get_config, get_logger
+from comfyui_router.utils import get_router_config, get_logger
 
 logger = get_logger(__name__)
 
@@ -66,7 +66,7 @@ def launch_comfyui_instances(comfy_dir, output_dir, start_port, cuda_devices,
 
 def launch_comfyuis(install_requirements_flag=True):
     # Step 1: Get the configuration
-    config = get_config()
+    config = get_router_config()
     logger.info(f"Launching ComfyUI with configuration: {config}")
     
     # Extract relevant configuration values
